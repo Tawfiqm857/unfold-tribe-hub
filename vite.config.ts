@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/unfold-tribe-hub/', // ← This line is essential for GitHub Pages
+  base: '/unfold-tribe-hub/', // ✅ Required for GitHub Pages
 
   server: {
     host: "::",
@@ -13,8 +13,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
