@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-"homepage": "https://github.com/Tawfiqm857/unfold-tribe-hub.git",
+"homepage": "https://github.com/Tawfiqm857/unfold-tribe-hub",
   
   "scripts": {
     "dev": "vite",
