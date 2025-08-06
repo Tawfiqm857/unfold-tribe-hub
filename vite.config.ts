@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: '/unfold-tribe-hub/', // ← This line is essential for GitHub Pages
+
   server: {
     host: "::",
     port: 8080,
