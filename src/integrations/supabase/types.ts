@@ -44,6 +44,92 @@ export type Database = {
         }
         Relationships: []
       }
+      hard_copy_requests: {
+        Row: {
+          created_at: string
+          delivery_address: string
+          email: string
+          full_name: string
+          id: string
+          magazine_id: string | null
+          phone_number: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_address: string
+          email: string
+          full_name: string
+          id?: string
+          magazine_id?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string
+          email?: string
+          full_name?: string
+          id?: string
+          magazine_id?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hard_copy_requests_magazine_id_fkey"
+            columns: ["magazine_id"]
+            isOneToOne: false
+            referencedRelation: "magazines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      magazines: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          embed_url: string
+          id: string
+          issue_number: string | null
+          publication_date: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          embed_url: string
+          id?: string
+          issue_number?: string | null
+          publication_date?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          embed_url?: string
+          id?: string
+          issue_number?: string | null
+          publication_date?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string

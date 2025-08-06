@@ -43,12 +43,9 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Auth Routes */}
-              <Route path="/auth" element={<AuthLayout />}>
-                <Route path="login" element={<Login />} />
-                <Route path="signup" element={<Signup />} />
-                <Route path="forgot-password" element={<ForgotPassword />} />
-                <Route path="onboarding" element={<Onboarding />} />
-              </Route>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/login" element={<Auth />} />
+              <Route path="/auth/signup" element={<Auth />} />
 
               {/* Protected App Routes */}
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>

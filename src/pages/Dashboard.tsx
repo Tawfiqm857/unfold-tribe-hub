@@ -37,10 +37,10 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.fullName?.split(' ')[0]}! 👋
+              Welcome back, {user?.fullName?.split(' ')[0] || 'Member'}! 👋
             </h1>
             <p className="text-white/80 text-lg">
-              Ready to connect and grow with your tribe today?
+              Ready to connect and grow with Nigerian entrepreneurs today?
             </p>
           </div>
           <div className="text-right">
