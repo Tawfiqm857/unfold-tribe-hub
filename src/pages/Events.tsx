@@ -146,6 +146,7 @@ const Events = () => {
                     <img 
                       src={event.image} 
                       alt={event.title}
+                      loading="lazy"
                       className="w-full h-48 md:h-full object-cover rounded-l-lg"
                     />
                   </div>
@@ -188,7 +189,7 @@ const Events = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src={event.organizer.avatar} alt={event.organizer.name} />
+                          <AvatarImage src={event.organizer.avatar} alt={event.organizer.name} loading="lazy" />
                           <AvatarFallback>{event.organizer.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="text-sm text-muted-foreground">by {event.organizer.name}</span>

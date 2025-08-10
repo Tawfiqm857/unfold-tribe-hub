@@ -83,7 +83,7 @@ const Feed = () => {
         <CardHeader>
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={user?.avatar} alt={user?.fullName} />
+              <AvatarImage src={user?.avatar} alt={user?.fullName} loading="lazy" />
               <AvatarFallback>{user?.fullName?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
@@ -153,7 +153,7 @@ const Feed = () => {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={post.author.avatar} alt={post.author.name} />
+                    <AvatarImage src={post.author.avatar} alt={post.author.name} loading="lazy" />
                     <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -181,6 +181,7 @@ const Feed = () => {
                   <img 
                     src={post.image} 
                     alt="Post content"
+                    loading="lazy"
                     className="w-full h-64 object-cover"
                   />
                 </div>

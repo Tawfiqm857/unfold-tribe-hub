@@ -62,7 +62,22 @@ const Magazines = () => {
         .order('publication_date', { ascending: false });
 
       if (error) throw error;
-      setMagazines(data || []);
+      if (!data || data.length === 0) {
+        const fallback: Magazine = {
+          id: 'fallback',
+          title: 'Unfold Editorial',
+          description: 'A curated editorial experience from Unfold Tribe Nigeria.',
+          issue_number: 'Issue 1',
+          cover_image_url: null,
+          publication_date: null,
+          embed_url: 'https://tawfiqm857.github.io/unfold-editorial-web/',
+          tags: ['Nigeria', 'Editorial'],
+          created_at: new Date().toISOString(),
+        };
+        setMagazines([fallback]);
+      } else {
+        setMagazines(data);
+      }
     } catch (error: any) {
       toast({
         title: "Error loading magazines",
@@ -178,6 +193,7 @@ const Magazines = () => {
                   <img 
                     src={magazines[0].cover_image_url || 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400&h=600&fit=crop'} 
                     alt={magazines[0].title}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -281,6 +297,7 @@ const Magazines = () => {
                   <img 
                     src={magazine.cover_image_url || 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400&h=600&fit=crop'} 
                     alt={magazine.title}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                 </div>
