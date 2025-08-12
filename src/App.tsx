@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -42,7 +42,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <HashRouter>
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>}>
               <Routes>
                 {/* Auth Routes */}
@@ -70,7 +70,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
+          </HashRouter>
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
