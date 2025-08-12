@@ -1,20 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 
 export interface User {
   id: string;
-  username: string;
+  username?: string;
   email: string;
-  fullName: string;
+  fullName?: string;
   avatar?: string;
-  role: 'founder' | 'creative' | 'developer' | 'admin';
+  role?: 'founder' | 'creative' | 'developer' | 'admin';
   bio?: string;
-  interests: string[];
+  interests?: string[];
   isAdmin?: boolean;
-  followers: number;
-  following: number;
-  points: number;
-  badges: string[];
-  joinedAt: Date;
+  followers?: number;
+  following?: number;
+  points?: number;
+  badges?: string[];
+  joinedAt?: Date;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 }
 
 interface AuthContextType {
@@ -22,101 +30,253 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (userData: Partial<User> & { email: string; password: string }) => Promise<void>;
+  signup: (userData: { email: string; password: string; fullName: string; role?: string }) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock user data
-  const mockUser: User = {
-    id: '1',
-    username: 'johndoe',
-    email: 'john@example.com',
-    fullName: 'John Doe',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    role: 'founder',
-    bio: 'Passionate entrepreneur building the future of digital communities.',
-    interests: ['Startups', 'AI', 'Product Design', 'Community Building'],
-    isAdmin: true,
-    followers: 1250,
-    following: 345,
-    points: 2850,
-    badges: ['Early Adopter', 'Community Builder', 'Mentor'],
-    joinedAt: new Date('2024-01-15')
-  };
-
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkAuth = async () => {
-      setIsLoading(true);
-      const savedUser = localStorage.getItem('unfold-tribe-user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
-      setIsLoading(false);
-    };
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setIsLoading(true);
 
-    checkAuth();
+        if (session?.user) {
+          // Fetch user profile from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (profile) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              fullName: profile.full_name,
+              avatar: profile.avatar_url,
+              bio: profile.bio,
+              phone: profile.phone,
+              address: profile.address,
+              city: profile.city,
+              state: profile.state,
+              country: profile.country,
+              // Set default values for UI compatibility
+              followers: 0,
+              following: 0,
+              points: 100,
+              badges: ['New Member'],
+              joinedAt: new Date(profile.created_at)
+            });
+          } else {
+            // Create profile if it doesn't exist
+            const newProfile = {
+              user_id: session.user.id,
+              full_name: session.user.user_metadata?.full_name || '',
+              email: session.user.email
+            };
+
+            const { error } = await supabase
+              .from('profiles')
+              .insert([newProfile]);
+
+            if (!error) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                fullName: session.user.user_metadata?.full_name || '',
+                followers: 0,
+                following: 0,
+                points: 100,
+                badges: ['New Member'],
+                joinedAt: new Date()
+              });
+            }
+          }
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // The onAuthStateChange will handle the session
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    // Mock login - in real app, this would call an API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (email === 'demo@unfoldtribe.com' && password === 'demo123') {
-      setUser(mockUser);
-      localStorage.setItem('unfold-tribe-user', JSON.stringify(mockUser));
-    } else {
-      throw new Error('Invalid credentials');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const signup = async (userData: Partial<User> & { email: string; password: string }) => {
+  const signup = async (userData: { email: string; password: string; fullName: string; role?: string }) => {
     setIsLoading(true);
-    // Mock signup
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newUser: User = {
-      ...mockUser,
-      id: Date.now().toString(),
-      email: userData.email,
-      fullName: userData.fullName || '',
-      username: userData.username || userData.email.split('@')[0],
-      role: userData.role || 'founder',
-      interests: userData.interests || [],
-      bio: userData.bio || '',
-      isAdmin: false,
-      followers: 0,
-      following: 0,
-      points: 100,
-      badges: ['New Member'],
-      joinedAt: new Date()
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('unfold-tribe-user', JSON.stringify(newUser));
-    setIsLoading(false);
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: userData.fullName,
+            role: userData.role || 'founder'
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Account created successfully!",
+        description: "Welcome to Unfold Tribe Nigeria. Please check your email to verify your account.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('unfold-tribe-user');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Goodbye!",
+        description: "You have been logged out successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const updateProfile = async (data: Partial<User>) => {
     if (!user) return;
     
-    const updatedUser = { ...user, ...data };
-    setUser(updatedUser);
-    localStorage.setItem('unfold-tribe-user', JSON.stringify(updatedUser));
+    try {
+      const updateData = {
+        full_name: data.fullName,
+        bio: data.bio,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        country: data.country,
+        avatar_url: data.avatar
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => 
+        updateData[key as keyof typeof updateData] === undefined && delete updateData[key as keyof typeof updateData]
+      );
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local user state
+      setUser(prev => prev ? { ...prev, ...data } : null);
+
+      toast({
+        title: "Profile updated!",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      // First verify current password
+      if (user?.email) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword
+        });
+        
+        if (signInError) {
+          throw new Error('Current password is incorrect');
+        }
+      }
+
+      // Update password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated!",
+        description: "Your password has been changed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Password update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const value: AuthContextType = {
@@ -126,7 +286,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     logout,
-    updateProfile
+    updateProfile,
+    updatePassword
   };
 
   return (

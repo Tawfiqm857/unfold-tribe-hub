@@ -5,16 +5,38 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { Calendar, Users, TrendingUp, MessageSquare, Star, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [followersCount, setFollowersCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
+  const [eventsCount, setEventsCount] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return;
+      const nowIso = new Date().toISOString();
+      const [{ count: fCount }, { count: pCount }, { count: eCount }] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
+        supabase.from('events').select('*', { count: 'exact', head: true }).gte('starts_at', nowIso),
+      ]);
+      setFollowersCount(fCount || 0);
+      setPostsCount(pCount || 0);
+      setEventsCount(eCount || 0);
+    };
+    load();
+  }, [user?.id]);
+
   const stats = [
     { label: 'Points', value: user?.points || 0, icon: Star, color: 'text-yellow-500' },
-    { label: 'Followers', value: user?.followers || 0, icon: Users, color: 'text-blue-500' },
-    { label: 'Posts', value: 23, icon: MessageSquare, color: 'text-green-500' },
-    { label: 'Events', value: 5, icon: Calendar, color: 'text-purple-500' },
+    { label: 'Followers', value: followersCount, icon: Users, color: 'text-blue-500' },
+    { label: 'Posts', value: postsCount, icon: MessageSquare, color: 'text-green-500' },
+    { label: 'Events', value: eventsCount, icon: Calendar, color: 'text-purple-500' },
   ];
 
   const recentActivity = [
@@ -37,10 +59,10 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.fullName?.split(' ')[0]}! 👋
+              Welcome back, {user?.fullName?.split(' ')[0] || 'Member'}! 👋
             </h1>
             <p className="text-white/80 text-lg">
-              Ready to connect and grow with your tribe today?
+              Ready to connect and grow with Nigerian entrepreneurs today?
             </p>
           </div>
           <div className="text-right">
